@@ -3,12 +3,12 @@ import discord
 from discord.ext import commands
 import youtube_dl
 from requests import get
-
+from keep_alive import keep_alive
+keep_alive()
 
 client = commands.Bot(command_prefix="!")
 
-TOKEN = os.environ['DISCORD_TOKEN']
-GUILD = os.environ['DISCORD_GUILD']
+my_secret = os.environ["DISCORD_TOKEN"]
 
 def search(arg):
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -105,4 +105,4 @@ YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
 async def searchd(ctx, arg):
     await ctx.send(search(arg))
 
-client.run(TOKEN)
+client.run(my_secret)
