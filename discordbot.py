@@ -28,6 +28,9 @@ def is_connected(ctx):
 async def on_ready():
     print('Bot is ready.')
 
+@client.command()
+async def test(ctx):
+    await ctx.send("TEST???")
 
 @client.command()
 async def play(ctx, *url):
