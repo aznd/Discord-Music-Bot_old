@@ -1,15 +1,14 @@
 import os
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
 import youtube_dl
 from requests import get
 
+
 client = commands.Bot(command_prefix="!")
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
+TOKEN = os.environ['DISCORD_TOKEN']
+GUILD = os.environ['DISCORD_GUILD']
 
 def search(arg):
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
