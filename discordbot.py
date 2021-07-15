@@ -27,11 +27,11 @@ def is_connected(ctx):
 
 @client.event
 async def on_ready():
-    print('Bot is ready.')
+    print('Bot isss ready.')
 
 
 @client.command()
-async def play(ctx, url):
+async def play(ctx, *url):
     song_there = os.path.isfile("song.mp3")
     try:
         if song_there:
@@ -53,9 +53,11 @@ async def play(ctx, url):
                 'preferredquality': '192',
             }],
             }
-            video_url = search(url)
+            data = search(url)
+            final_url = data.get('webpage_url')
+            print(final_url)
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([video_url])
+                ydl.download((final_url,))
                 for file in os.listdir("./"):
                     if file.endswith(".mp3"):
                         os.rename(file, "song.mp3")
