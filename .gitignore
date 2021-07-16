@@ -4,4 +4,4 @@ __pycache__/
 .replit
 poetry.lock
 pyproject.toml
-workspace2.code_workspace
+workspace2.code-workspace
