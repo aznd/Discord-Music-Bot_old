@@ -3,12 +3,15 @@ import discord
 from discord.ext import commands
 import youtube_dl
 from requests import get
-from keep_alive import keep_alive
-keep_alive()
+#from keep_alive import keep_alive
+#keep_alive()
 
 client = commands.Bot(command_prefix="-")
 
-my_secret = os.environ["DISCORD_TOKEN"]
+#my_secret = os.environ["DISCORD_TOKEN"]
+
+YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
+now_playing = ""
 
 def search(arg):
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -30,7 +33,8 @@ async def on_ready():
 
 @client.command()
 async def play(ctx, *url):
-    song_there = os.path.isfile("song.wemb")
+    global now_playing
+    song_there = os.path.isfile("song.webm")
     try:
         if song_there:
             os.remove("song.webm")
@@ -48,7 +52,7 @@ async def play(ctx, *url):
             }
             data = search(url)
             final_url = data.get('webpage_url')
-            print(final_url)
+            now_playing = final_url
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download((final_url,))
                 for file in os.listdir("./"):
@@ -60,18 +64,22 @@ async def play(ctx, *url):
 
 @client.command()
 async def leave(ctx):
+    global now_playing
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if is_connected(ctx):
         await voice.disconnect()
+        now_playing = ""
     else:
         await ctx.send('Bot currently not in the channel.')
 
 @client.command()
 async def stop(ctx):
+    global now_playing
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     is_playing = voice.is_playing()
     if is_playing:
         voice.stop()
+        now_playing = ""
     else:
         await ctx.send('Bot is currently not playing anything.')
 
@@ -93,10 +101,14 @@ async def resume(ctx):
     else:
         await ctx.send('Bot is currently not paused.')
 
-YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
-
 @client.command()
-async def searchd(ctx, arg):
-    await ctx.send(search(arg))
+async def np(ctx):
+    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+        if now_playing == "":
+            await ctx.send("Nothing is currently playing.")
+        else:
+            info_dict = ydl.extract_info(now_playing, download=False)
+            video_title = info_dict.get('title', None)
+            await ctx.send("Now Playing: " + video_title)
 
-client.run(my_secret)
+client.run("ODQ2NDMyOTkwNTczNzU2NDQ2.YKvcJg.Fcul7-zRhHphFrO5i9jQTNV_W4w")
