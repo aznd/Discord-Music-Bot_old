@@ -6,7 +6,7 @@ from requests import get
 from keep_alive import keep_alive
 keep_alive()
 
-client = commands.Bot(command_prefix="!")
+client = commands.Bot(command_prefix="-")
 
 my_secret = os.environ["DISCORD_TOKEN"]
 
@@ -48,12 +48,7 @@ async def play(ctx, *url):
             await voiceChannel.connect()
             voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
             ydl_opts = {
-            'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
+            'format': '249/250/251',
             }
             data = search(url)
             final_url = data.get('webpage_url')
@@ -61,9 +56,9 @@ async def play(ctx, *url):
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download((final_url,))
                 for file in os.listdir("./"):
-                    if file.endswith(".mp3"):
-                        os.rename(file, "song.mp3")
-                        voice.play(discord.FFmpegOpusAudio("song.mp3"))
+                    if file.endswith(".webm"):
+                        os.rename(file, "song.webm")
+                        voice.play(discord.FFmpegOpusAudio("song.webm"))
     except AttributeError:
         await ctx.send('You need to be in a voice channel to execute this command.')
 
