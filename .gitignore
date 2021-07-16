@@ -1,1 +1,7 @@
 .env
+/__pycache_
+.breakpoints
+.replit
+poetry.lock
+pyproject.toml
+workspace2.code_workspace
