@@ -29,15 +29,11 @@ async def on_ready():
     print('Bot is ready.')
 
 @client.command()
-async def test(ctx):
-    await ctx.send("TEST???")
-
-@client.command()
 async def play(ctx, *url):
-    song_there = os.path.isfile("song.mp3")
+    song_there = os.path.isfile("song.wemb")
     try:
         if song_there:
-            os.remove("song.mp3")
+            os.remove("song.webm")
     except PermissionError:
         await ctx.send("PermissionError: There is still a song playing")
         return
