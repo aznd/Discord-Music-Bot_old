@@ -5,3 +5,4 @@ __pycache__/
 poetry.lock
 pyproject.toml
 workspace2.code-workspace
+song.webm

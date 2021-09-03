@@ -13,6 +13,7 @@ client = commands.Bot(command_prefix="-")
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
 now_playing = ""
 queue = []
+
 def search(arg):
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
         try:

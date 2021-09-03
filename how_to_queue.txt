@@ -1,0 +1,13 @@
+Queue:
+1. When someone uses the play command, check if there is something in var NOW_PLAYING.
+2. if yes, append the url to var QUEUE.
+3. if the now_playing songs end, check if there is something in the var QUEUE
+4. if yes, play the first element in that list
+5. if no, leave the channel
+
+how to remove the current song.webm?
+1. first !play will just download the song and play it
+2. if then there is something in the queue (4), delete the old song.webm and download that new one.
+
+!queue?
+Translate every 
