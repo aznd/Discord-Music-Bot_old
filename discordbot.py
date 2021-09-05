@@ -3,12 +3,13 @@ import discord
 from discord.ext import commands
 import youtube_dl
 from requests import get
+from typing import Union
 #from keep_alive import keep_alive
 #keep_alive()
 
 client = commands.Bot(command_prefix="-")
-
 #my_secret = os.environ["DISCORD_TOKEN"]
+
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'True'}
 now_playing = ""
@@ -34,33 +35,34 @@ async def on_ready():
 @client.command()
 async def play(ctx, *url):
     global now_playing
-    song_there = os.path.isfile("song.webm")
-    try:
-        if song_there:
-            os.remove("song.webm")
-    except PermissionError:
-        await ctx.send("PermissionError: There is still a song playing")
-        return
-    try:
-        voicechannel_author =  ctx.message.author.voice.channel
-        if voicechannel_author:
-            voiceChannel = discord.utils.get(ctx.guild.voice_channels, name=str(voicechannel_author))
-            await voiceChannel.connect()
-            voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-            ydl_opts = {
-            'format': '249/250/251',
-            }
-            data = search(url)
-            final_url = data.get('webpage_url')
-            now_playing = final_url
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download((final_url,))
+    if now_playing != "":
+        queue.append(url)
+    elif now_playing == "":
+        song_there = os.path.isfile("song.webm")
+        try:
+            if song_there:
+                os.remove("song.webm")
+        except PermissionError:
+            await ctx.send("PermissionError: There is still a song playing")
+            return
+        try:
+            voicechannel_author =  ctx.message.author.voice.channel
+            if voicechannel_author:
+                voiceChannel = discord.utils.get(ctx.guild.voice_channels, name=str(voicechannel_author))
+                await voiceChannel.connect()
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                ydl_opts = {'format': '249/250/251',}
+                data = search(url)
+                final_url = data.get('webpage_url')
+                now_playing = final_url
+                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download((final_url,))
                 for file in os.listdir("./"):
                     if file.endswith(".webm"):
                         os.rename(file, "song.webm")
                         voice.play(discord.FFmpegOpusAudio("song.webm"))
-    except AttributeError:
-        await ctx.send('You need to be in a voice channel to execute this command.')
+        except AttributeError:
+            await ctx.send('You need to be in a voice channel to execute this command.')
 
 @client.command()
 async def leave(ctx):
@@ -75,13 +77,16 @@ async def leave(ctx):
 @client.command()
 async def stop(ctx):
     global now_playing
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    is_playing = voice.is_playing()
-    if is_playing:
-        voice.stop()
-        now_playing = ""
+    voice: Union[ VoiceProtocol , None ] = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice is None:
+        print("yes")
     else:
-        await ctx.send('Bot is currently not playing anything.')
+        is_playing = voice.is_playing()
+        if is_playing:
+            voice.stop()
+            now_playing = ""
+        else:
+            await ctx.send('Bot is currently not playing anything.')
 
 @client.command()
 async def pause(ctx):
@@ -112,5 +117,5 @@ async def np(ctx):
             message = discord.Embed(title = "Now Playing:")
             message.add_field(name = video_title, value = now_playing)
             await ctx.send(embed = message)
+            print(queue)
 
-client.run("ODQ2NDMyOTkwNTczNzU2NDQ2.YKvcJg.cEm3WT-BJaXiT_CLpv2MojIrebs")
