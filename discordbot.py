@@ -125,8 +125,14 @@ async def raw(ctx):
 
 @client.command()
 async def clear(ctx):
+    global now_playing
+    global now_playing_title
+    global now_playing_url
     queue_of_titles.clear()
     queue_of_urls.clear()
+    now_playing = ""
+    now_playing_title = ""
+    now_playing_url = ""
     await ctx.send("Successfully cleared the queue!")
 
 
