@@ -1,13 +1,13 @@
 import os
 import discord
 from discord.ext import commands
+from keep_alive import keep_alive
 import youtube_dl
 from requests import get
 from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-# from keep_alive import keep_alive
-# keep_alive()
+keep_alive()
 
 client = commands.Bot(command_prefix="-")
 
