@@ -117,6 +117,12 @@ async def raw(ctx):
     await ctx.send(queue_of_urls)
 
 
+@client.command()
+async def clear(ctx):
+    queue_of_titles.clear()
+    queue_of_urls.clear()
+
+
 @client.command(aliases=['p'])
 async def play(ctx, *url):
     global now_playing

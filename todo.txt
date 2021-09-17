@@ -1,5 +1,4 @@
 TODO:
 
-- make sure everything works correct
 - add clear command (clears queue)
 - add support for youtube playlist and youtube url
