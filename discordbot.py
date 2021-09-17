@@ -94,6 +94,12 @@ async def on_ready():
     print('Bot is ready.')
 
 
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send('Unknown command! Use -help to get all commands.')
+
+
 @client.command(aliases=['queue'])
 async def list(ctx):
     if len(queue_of_titles) == 0:
@@ -121,6 +127,7 @@ async def raw(ctx):
 async def clear(ctx):
     queue_of_titles.clear()
     queue_of_urls.clear()
+    await ctx.send("Successfully cleared the queue!")
 
 
 @client.command(aliases=['p'])
