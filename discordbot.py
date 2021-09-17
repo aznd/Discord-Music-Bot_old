@@ -82,7 +82,7 @@ def next_song(ctx):
                         queue_of_titles.pop(0)
                         queue_of_urls.pop(0)
         except AttributeError:
-            await ctx.send('''You need to be in a voice channel
+            ctx.send('''You need to be in a voice channel
                         to execute this command.''')
 
 
