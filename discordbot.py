@@ -18,7 +18,9 @@ YDL_OPTIONS = {
 }
 
 now_playing = ""
-queue = []
+now_playing_url = ""
+now_playing_title = ""
+queue_of_urls = []
 queue_of_titles = []
 got_stopped = False
 video_title = ""
@@ -51,7 +53,6 @@ def is_connected(ctx):
 
 def clear_np(ctx):
     global now_playing
-    global queue
     global got_stopped
     if got_stopped is False:
         now_playing = ""
@@ -62,15 +63,16 @@ def clear_np(ctx):
 
 def next_song(ctx):
     global now_playing
-    global queue
-    if queue != "":
+    global queue_of_urls
+    global queue_of_titles
+    if queue_of_urls != "":
         voicechannel_author = ctx.message.author.voice.channel
         try:
             if voicechannel_author:
                 voice = discord.utils.get(client.voice_clients,
                                           guild=ctx.guild)
                 ydl_opts = {'format': '249/250/251'}
-                data = search(queue[0])
+                data = search(queue_of_titles[0])
                 final_url = data.get('webpage_url')
                 with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                     ydl.download((final_url,))
@@ -79,8 +81,9 @@ def next_song(ctx):
                         os.rename(file, "song.webm")
                         voice.play(discord.FFmpegOpusAudio("song.webm"),
                                    after=lambda x: clear_np(ctx))
-                        now_playing = "not empty!"
-                        queue.pop(0)
+                        now_playing = queue_of_titles[0]
+                        queue_of_titles.pop(0)
+                        queue_of_urls.pop(0)
         except AttributeError:
             ctx.send('''You need to be in a voice channel
                         to execute this command.''')
@@ -93,40 +96,39 @@ async def on_ready():
 
 @client.command(aliases=['queue'])
 async def list(ctx):
-    global video_title
-    if video_title == "":
-        await ctx.send("Nothing is currently in the queue.")
+    if len(queue_of_titles) == 0:
+        await ctx.send("Nothing is in the queue.")
     else:
-        await ctx.send("Queue: ")
+        global video_title
+        i = 1
         embed = discord.Embed(title="Queue:",
                               description=" ",
                               color=0xFF5733)
-        if len(queue_of_titles) >= 2:
-            i = 0
-            for _ in queue_of_titles:
-                embed.add_field(name=str(i) + ":", value=queue_of_titles[int(i)])
-                i += 1
-        else:
-            embed.add_field(name="1: ", value=video_title)
+        for e in queue_of_titles:
+            embed.add_field(name=str(i) + ":",
+                            value=str(e))
+            i += 1
         await ctx.send(embed=embed)
 
 
 @client.command()
 async def raw(ctx):
     await ctx.send("Raw queue:")
-    await ctx.send(queue)
+    await ctx.send(queue_of_urls)
 
 
 @client.command(aliases=['p'])
 async def play(ctx, *url):
     global now_playing
-    global queue
+    global queue_of_urls
+    global now_playing_title
+    global now_playing_url
     # QUEUE SYSTEM
     if url == "":
         await ctx.send("You need to provide a url, or a video name.")
     else:
         if now_playing != "":
-            queue.append(url)
+            queue_of_urls.append(url)
             add_list_queue_item_(url)
             await ctx.send("Added Song to the queue.")
         elif now_playing == "":
@@ -148,7 +150,7 @@ async def play(ctx, *url):
                     ydl_opts = {'format': '249/250/251'}
                     data = search(url)
                     final_url = data.get('webpage_url')
-                    now_playing = final_url
+                    now_playing = data.get('title')
                     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                         ydl.download((final_url,))
                     for file in os.listdir("./"):
@@ -161,7 +163,7 @@ async def play(ctx, *url):
                             to execute this command.''')
 
 
-@client.command()
+@client.command(aliases=['l'])
 async def leave(ctx):
     global now_playing
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
@@ -188,6 +190,19 @@ async def stop(ctx):
 
 
 @client.command()
+async def skip(ctx):
+    global now_playing
+    global got_stopped
+    global video_title
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    now_playing = ""
+    voice.stop()
+    got_stopped = True
+    video_title = ""
+    next_song(ctx)
+
+
+@client.command()
 async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     is_playing = voice.is_playing()
@@ -208,23 +223,20 @@ async def resume(ctx):
 
 
 @client.command()
-async def skip(ctx):
-    await ctx.send("Not implemented yet.")
-
-
-@client.command()
 async def np(ctx):
-    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-        if now_playing == "":
-            await ctx.send("Nothing is currently playing.")
-        else:
-            info_dict = ydl.extract_info(now_playing, download=False)
-            video_title = info_dict.get('title')
-            video_thumbnail = info_dict.get('thumbnail')
-            message = discord.Embed(title="Now Playing:")
-            message.add_field(name=str(video_title),
-                              value=str(now_playing))
-            message.set_thumbnail(url=video_thumbnail)
-            await ctx.send(embed=message)
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    is_playing = voice.is_playing()
+    if is_playing is None:
+        await ctx.send("Nothing is currently playing.")
+    else:
+        data = search(now_playing)
+        video_url = data.get('webpage_url')
+        video_title = data.get('title')
+        video_thumbnail = data.get('thumbnail')
+        message = discord.Embed(title="Now Playing:")
+        message.add_field(name=str(video_title),
+                          value=str(video_url))
+        message.set_thumbnail(url=video_thumbnail)
+        await ctx.send(embed=message)
 
 client.run(TOKEN)
