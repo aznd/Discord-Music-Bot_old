@@ -4,7 +4,7 @@ from discord.ext import commands
 from keep_alive import keep_alive
 import youtube_dl
 from requests import get
-my_secret = os.environ['TOKEN']
+TOKEN = os.environ['TOKEN']
 keep_alive()
 client = commands.Bot(command_prefix="-")
 
@@ -184,6 +184,7 @@ async def leave(ctx):
     global now_playing
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if is_connected(ctx):
+        await voice.stop()
         await voice.disconnect(force=False)
         message = await ctx.send("Bot left the channel: " + str(voice.channel))
         await message.add_reaction("👋")
