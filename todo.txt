@@ -1,4 +1,5 @@
 TODO:
 
-- add clear command (clears queue)
+- add clear command (clears queue and everything else) (DONE)
 - add support for youtube playlist and youtube url
+- download songs that are in the queue in the background while there is a song playing to increase the speed by A LOT!!!

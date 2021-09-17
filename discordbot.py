@@ -87,14 +87,15 @@ def next_song(ctx):
 
 
 def clear_all():
-  global now_playing
-  global now_playing_title
-  global now_playing_url
-  queue_of_titles.clear()
-  queue_of_urls.clear()
-  now_playing = ""
-  now_playing_title = ""
-  now_playing_url = ""
+    global now_playing
+    global now_playing_title
+    global now_playing_url
+    queue_of_titles.clear()
+    queue_of_urls.clear()
+    now_playing = ""
+    now_playing_title = ""
+    now_playing_url = ""
+
 
 @client.event
 async def on_ready():
