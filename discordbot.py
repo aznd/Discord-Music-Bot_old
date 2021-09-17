@@ -82,9 +82,19 @@ def next_song(ctx):
                         queue_of_titles.pop(0)
                         queue_of_urls.pop(0)
         except AttributeError:
-            ctx.send('''You need to be in a voice channel
+            await ctx.send('''You need to be in a voice channel
                         to execute this command.''')
 
+
+def clear_all():
+  global now_playing
+  global now_playing_title
+  global now_playing_url
+  queue_of_titles.clear()
+  queue_of_urls.clear()
+  now_playing = ""
+  now_playing_title = ""
+  now_playing_url = ""
 
 @client.event
 async def on_ready():
@@ -122,14 +132,7 @@ async def raw(ctx):
 
 @client.command()
 async def clear(ctx):
-    global now_playing
-    global now_playing_title
-    global now_playing_url
-    queue_of_titles.clear()
-    queue_of_urls.clear()
-    now_playing = ""
-    now_playing_title = ""
-    now_playing_url = ""
+    clear_all()
     await ctx.send("Successfully cleared the queue!")
 
 
@@ -184,7 +187,6 @@ async def leave(ctx):
     global now_playing
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if is_connected(ctx):
-        await voice.stop()
         await voice.disconnect(force=False)
         message = await ctx.send("Bot left the channel: " + str(voice.channel))
         await message.add_reaction("👋")
