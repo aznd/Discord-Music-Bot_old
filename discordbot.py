@@ -189,7 +189,8 @@ async def leave(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if is_connected(ctx):
         await voice.disconnect(force=False)
-        message = await ctx.send("Bot left the channel: " + str(voice.channel))
+        clear_all()
+        message = await ctx.send("Bot left the channel: " + str(voice.channel) + " and cleared the queue.")
         await message.add_reaction("👋")
     else:
         await ctx.send('Bot currently not in the channel.')
