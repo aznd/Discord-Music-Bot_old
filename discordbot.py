@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 from keep_alive import keep_alive
 import youtube_dl
-from requests import get
 TOKEN = os.environ['TOKEN']
 keep_alive()
 client = commands.Bot(command_prefix="-")
@@ -21,6 +20,7 @@ queue_of_urls = []
 queue_of_titles = []
 got_stopped = False
 video_title = ""
+warn_user_not_in_channel = "You need to be in a voice channel to use this command."
 
 
 def add_list_queue_item_(queue_url):
@@ -33,13 +33,11 @@ def add_list_queue_item_(queue_url):
 
 def search(arg):
     with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-        try:
-            get(arg)
-        except:
+        if arg.startswith('http'):
+            video = ydl.extract_info(arg, download=False)
+        else:
             video = ydl.extract_info(f"ytsearch:{arg}",
                                      download=False)['entries'][0]
-        else:
-            video = ydl.extract_info(arg, download=False)
     return video
 
 
@@ -68,10 +66,9 @@ def next_song(ctx):
             if voicechannel_author:
                 voice = discord.utils.get(client.voice_clients,
                                           guild=ctx.guild)
-                ydl_opts = {'format': '249/250/251'}
                 data = search(queue_of_titles[0])
                 final_url = data.get('webpage_url')
-                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
                     ydl.download((final_url,))
                 for file in os.listdir("./"):
                     if file.endswith(".webm"):
@@ -82,8 +79,7 @@ def next_song(ctx):
                         queue_of_titles.pop(0)
                         queue_of_urls.pop(0)
         except AttributeError:
-            ctx.send('''You need to be in a voice channel
-                        to execute this command.''')
+            ctx.send(warn_user_not_in_channel)
 
 
 def clear_all():
@@ -138,7 +134,7 @@ async def clear(ctx):
 
 
 @client.command(aliases=['p'])
-async def play(ctx, *url):
+async def play(ctx, *, url):
     global now_playing
     global queue_of_urls
     global now_playing_title
@@ -179,8 +175,7 @@ async def play(ctx, *url):
                             voice.play(discord.FFmpegOpusAudio("song.webm"),
                                        after=lambda x: clear_np(ctx))
             except AttributeError:
-                await ctx.send('''You need to be in a voice channel
-                            to execute this command.''')
+                await ctx.send(warn_user_not_in_channel)
 
 
 @client.command(aliases=['l'])
