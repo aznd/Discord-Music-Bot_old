@@ -20,7 +20,8 @@ queue_of_urls = []
 queue_of_titles = []
 got_stopped = False
 video_title = ""
-warn_user_not_in_channel = "You need to be in a voice channel to use this command."
+warn_user_not_in_channel = ("You need to be in a voice channel "
+                            "to use this command.")
 
 
 def add_list_queue_item_(queue_url):
@@ -185,7 +186,9 @@ async def leave(ctx):
     if is_connected(ctx):
         await voice.disconnect(force=False)
         clear_all()
-        message = await ctx.send("Bot left the channel: " + str(voice.channel) + " and cleared the queue.")
+        message = await ctx.send("Bot left the channel: "
+                                 + str(voice.channel)
+                                 + " and cleared the queue.")
         await message.add_reaction("👋")
     else:
         await ctx.send('Bot currently not in the channel.')
