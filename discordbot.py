@@ -1,10 +1,10 @@
 import os
 import discord
 from discord.ext import commands
-from keep_alive import keep_alive
+from dotenv import load_dotenv
 import youtube_dl
-TOKEN = os.environ['TOKEN']
-keep_alive()
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
 client = commands.Bot(command_prefix="-")
 
 
@@ -20,6 +20,7 @@ queue_of_urls = []
 queue_of_titles = []
 got_stopped = False
 video_title = ""
+has_joined = False
 warn_user_not_in_channel = ("You need to be in a voice channel "
                             "to use this command.")
 
@@ -133,6 +134,17 @@ async def clear(ctx):
     clear_all()
     await ctx.send("Successfully cleared the queue!")
 
+@client.command()
+async def join(ctx):
+    global has_joined
+    voicechannel_author = ctx.message.author.voice.channel
+    voiceChannel = discord.utils.get(ctx.guild.voice_channels,
+                                     name=str(voicechannel_author))
+    try:
+        await voiceChannel.connect()
+        has_joined = True
+    except Exception as e:
+        await ctx.send(e)
 
 @client.command(aliases=['p'])
 async def play(ctx, *, url):
@@ -150,33 +162,31 @@ async def play(ctx, *, url):
             await ctx.send("Added Song to the queue.")
         elif now_playing == "":
             song_there = os.path.isfile("song.webm")
-            try:
-                if song_there:
-                    os.remove("song.webm")
-            except PermissionError:
-                await ctx.send("PermissionError: There is still a song playing")
-                return
-            try:
-                voicechannel_author = ctx.message.author.voice.channel
-                if voicechannel_author:
-                    voiceChannel = discord.utils.get(ctx.guild.voice_channels,
-                                                     name=str(voicechannel_author))
+            if song_there:
+                os.remove("song.webm")
+            voicechannel_author = ctx.message.author.voice.channel
+            if voicechannel_author:
+                voiceChannel = discord.utils.get(ctx.guild.voice_channels,
+                                                    name=str(voicechannel_author))
+                if has_joined:
+                    pass
+                else:
                     await voiceChannel.connect()
-                    voice = discord.utils.get(client.voice_clients,
-                                              guild=ctx.guild)
-                    ydl_opts = {'format': '249/250/251'}
-                    data = search(url)
-                    final_url = data.get('webpage_url')
-                    now_playing = data.get('title')
-                    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                        ydl.download((final_url,))
-                    for file in os.listdir("./"):
-                        if file.endswith(".webm"):
-                            os.rename(file, "song.webm")
-                            voice.play(discord.FFmpegOpusAudio("song.webm"),
-                                       after=lambda x: clear_np(ctx))
-            except AttributeError:
-                await ctx.send(warn_user_not_in_channel)
+                voice = discord.utils.get(client.voice_clients,
+                                            guild=ctx.guild)
+                ydl_opts = {'format': '249/250/251'}
+                data = search(url)
+                final_url = data.get('webpage_url')
+                now_playing = data.get('title')
+                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download((final_url,))
+                for file in os.listdir("./"):
+                    if file.endswith(".webm"):
+                        os.rename(file, "song.webm")
+                        voice.play(discord.FFmpegOpusAudio("song.webm"),
+                                    after=lambda x: clear_np(ctx))
+#            except AttributeError:
+#                await ctx.send(warn_user_not_in_channel)
 
 
 @client.command(aliases=['l'])
