@@ -3,3 +3,33 @@ TODO:
 - add support for youtube playlist
 - download songs that are in the queue in the background to increase the speed by A LOT!!!
 - use cogs
+
+SUPPORT FOR YOUTUBE PLAYLISTS:
+
+with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+    video = ydl.extract_info("https://www.youtube.com/playlist?list=PLr5OsF2umninLmW-yux0oONqNaQiIpJhw", download=False)
+
+create list containing the video urls of the playlist
+playlist_items = []
+
+for i in video['entries']:
+    playlist_items.append(i['webpage_url'])
+
+
+
+where webpage_url is all the video urls in the playlist, in order.
+check if the string "list" is in arg. if yes, set isPlaylist to true. use global vars
+if is_Playlist:
+  then we download the first video, and use after and the function and download the next and the next and if the list is empty, we just stop
+else:
+  everything else
+
+
+
+VERY IMPORTANT!!!!!!
+when a normal video is added, FIRST play the entire playlist and then play the queue.
+so maybe if playlist_items.len(0):
+  then do normal shit, and set isplaying_playlist to false
+else:
+  set isplaying_playlist to true and first play entire playlist and then the queue.
+  also set isplaying_playlist to false after playlist is empty
