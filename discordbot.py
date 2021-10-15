@@ -10,7 +10,6 @@ client = commands.Bot(command_prefix="-")
 
 YDL_OPTIONS = {
         'format': 'bestaudio',
-        'noplaylist': 'True'
 }
 
 now_playing = ""
