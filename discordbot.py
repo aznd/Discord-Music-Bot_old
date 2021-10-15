@@ -68,18 +68,30 @@ def next_song(ctx):
             if voicechannel_author:
                 voice = discord.utils.get(client.voice_clients,
                                           guild=ctx.guild)
-                data = search(queue_of_titles[0])
-                final_url = data.get('webpage_url')
-                with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-                    ydl.download((final_url,))
-                for file in os.listdir("./"):
-                    if file.endswith(".webm"):
-                        os.rename(file, "song.webm")
-                        voice.play(discord.FFmpegOpusAudio("song.webm"),
-                                   after=lambda x: clear_np(ctx))
-                        now_playing = queue_of_titles[0]
-                        queue_of_titles.pop(0)
-                        queue_of_urls.pop(0)
+                if not queue_of_urls:
+                    data = search(queue_of_titles[0])
+                    final_url = data.get('webpage_url')
+                    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                        ydl.download((final_url,))
+                    for file in os.listdir("./"):
+                        if file.endswith(".webm"):
+                            os.rename(file, "song.webm")
+                            voice.play(discord.FFmpegOpusAudio("song.webm"),
+                                    after=lambda x: clear_np(ctx))
+                            now_playing = queue_of_titles[0]
+                            queue_of_titles.pop(0)
+                            queue_of_urls.pop(0)
+                elif queue_of_urls:
+                    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                        ydl.download((queue_of_urls[0],))
+                    for file in os.listdir("./"):
+                        if file.endswith(".webm"):
+                            os.rename(file, "song.webm")
+                            voice.play(discord.FFmpegOpusAudio("song.webm"),
+                                    after=lambda x: clear_np(ctx))
+                            now_playing = queue_of_titles[0]
+                            queue_of_titles.pop(0)
+                            queue_of_urls.pop(0)
         except AttributeError:
             ctx.send(warn_user_not_in_channel)
 
@@ -134,6 +146,7 @@ async def clear(ctx):
     clear_all()
     await ctx.send("Successfully cleared the queue!")
 
+
 @client.command()
 async def join(ctx):
     global has_joined
@@ -146,47 +159,61 @@ async def join(ctx):
     except Exception as e:
         await ctx.send(e)
 
+
 @client.command(aliases=['p'])
 async def play(ctx, *, url):
     global now_playing
     global queue_of_urls
     global now_playing_title
     global now_playing_url
-    # QUEUE SYSTEM
+    # If no URL was provided, warn the user. 
     if url == "":
         await ctx.send("You need to provide a url, or a video name.")
-    else:
-        if now_playing != "":
+        return
+    # If there is something currently playing, just add to the queue.
+    elif now_playing != "":
+        if "list" in url:
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                data = ydl.extract_info(url, download=False)
+                for i in data['entries']:
+                    queue_of_urls.append(i['webpage_url'])
+                is_playlist = True
+                await ctx.send("Added playlist to the queue. (If your provided link isn't a playlist, please send @aznd the link.)")
+        else:
             queue_of_urls.append(url)
             add_list_queue_item_(url)
             await ctx.send("Added Song to the queue.")
-        elif now_playing == "":
+    # If nothing is currently playing, we can actually play it immediately.
+    elif now_playing == "":
+        # If queue_of_urls is empty, we dont have a playlist
+        if not queue_of_urls:
+            data = search(url)
+            final_url = data.get('webpage_url')
+            now_playing = data.get('title')
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                ydl.download((final_url,))
+            for file in os.listdir("./"):
+                if file.endswith(".webm"):
+                    os.rename(file, "song.webm")
+                    voice.play(discord.FFmpegOpusAudio("song.webm"),
+                                after=lambda x: clear_np(ctx))
+        # If queue_of_urls is not empty, we have a playlist.
+        if queue_of_urls:
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                ydl.download((queue_of_urls[0],))
             song_there = os.path.isfile("song.webm")
             if song_there:
                 os.remove("song.webm")
             voicechannel_author = ctx.message.author.voice.channel
             if voicechannel_author:
                 voiceChannel = discord.utils.get(ctx.guild.voice_channels,
-                                                    name=str(voicechannel_author))
+                                                 name=str(voicechannel_author))
                 if has_joined:
                     pass
                 else:
                     await voiceChannel.connect()
-                voice = discord.utils.get(client.voice_clients,
-                                            guild=ctx.guild)
-                ydl_opts = {'format': '249/250/251'}
-                data = search(url)
-                final_url = data.get('webpage_url')
-                now_playing = data.get('title')
-                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download((final_url,))
-                for file in os.listdir("./"):
-                    if file.endswith(".webm"):
-                        os.rename(file, "song.webm")
-                        voice.play(discord.FFmpegOpusAudio("song.webm"),
-                                    after=lambda x: clear_np(ctx))
-#            except AttributeError:
-#                await ctx.send(warn_user_not_in_channel)
+                voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                voice.play(discord.FFmpegOpusAudio("song.webm"), after=lambda x: clear_np(ctx))
 
 
 @client.command(aliases=['l'])
