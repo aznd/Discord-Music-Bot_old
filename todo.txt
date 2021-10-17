@@ -1,5 +1,4 @@
 TODO:
 
-- add support for youtube playlist
 - download songs that are in the queue in the background to increase the speed by A LOT!!!
 - use cogs
