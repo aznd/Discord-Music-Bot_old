@@ -59,6 +59,8 @@ def next_song(ctx):
         if voicechannel_author:
             voice = discord.utils.get(client.voice_clients,
                                       guild=ctx.guild)
+            if voice.is_playing():
+                voice.stop()
             # data = search(queue_of_titles[0])
             # final_url = data.get('webpage_url')
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -233,7 +235,7 @@ async def stop(ctx):
     if is_playing:
         queue_of_titles = []
         queue_of_urls = []
-        await ctx.send("Bot stopped and cleared the queue. (If you didnt wanted to clear the queue, use the pause command instead of stop.)")
+        await ctx.send("Bot stopped and cleared the queue. (If you didnt want to clear the queue, use the pause command instead of stop.)")
         voice.stop()
         now_playing = ""
     else:
