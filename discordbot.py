@@ -10,6 +10,7 @@ client = commands.Bot(command_prefix="-")
 
 YDL_OPTIONS = {
         'format': 'bestaudio',
+        'no-abort-on-error': 'True'
 }
 
 now_playing = ""
@@ -19,9 +20,9 @@ video_title = ""
 has_joined = False
 warn_user_not_in_channel = ("You need to be in a voice channel "
                             "to use this command.")
-added_playlist = ("Added playlist to the queue. "
-                  "(If your provided link isn't a playlist, "
-                  "please send @aznd the link.)")
+adding_playlist = ("Adding playlist to the queue. "
+                   "(If your provided link isn't a playlist, "
+                   "please send @aznd the link.)")
 
 
 def add_list_queue_item(queue_url):
@@ -63,18 +64,19 @@ def next_song(ctx):
                                   guild=ctx.guild)
         if voice.is_playing():
             voice.stop()
-        # data = search(queue_of_titles[0])
-        # final_url = data.get('webpage_url')
-        with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-            ydl.download((queue_of_urls[0],))
-        for file in os.listdir("./"):
-            if file.endswith(".webm"):
-                os.rename(file, "song.webm")
-                voice.play(discord.FFmpegOpusAudio("song.webm"),
-                           after=lambda x: clear_np(ctx))
-                now_playing = queue_of_titles[0]
-                queue_of_titles.pop(0)
-                queue_of_urls.pop(0)
+        try:
+            with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+                ydl.download((queue_of_urls[0],))
+            for file in os.listdir("./"):
+                if file.endswith(".webm"):
+                    os.rename(file, "song.webm")
+                    voice.play(discord.FFmpegOpusAudio("song.webm"),
+                               after=lambda x: clear_np(ctx))
+                    now_playing = queue_of_titles[0]
+                    queue_of_titles.pop(0)
+                    queue_of_urls.pop(0)
+        except IndexError:
+            ctx.send("Queue is now empty.")
 
 
 def clear_all():
@@ -148,12 +150,12 @@ async def play(ctx, *, url):
     # If there is something currently playing, just add it to the queue.
     elif now_playing != "":
         if "list" in str(url):
+            await ctx.send(adding_playlist)
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
                 data = ydl.extract_info(url, download=False)
                 for i in data['entries']:
                     queue_of_urls.append(i['webpage_url'])
                     queue_of_titles.append(i['title'])
-                await ctx.send("Added playlist to the queue. (If your provided link isn't a playlist, please send @aznd the link.)")
         else:
             data = search(url)
             final_url = data.get('webpage_url')
@@ -164,12 +166,12 @@ async def play(ctx, *, url):
     elif now_playing == "":
         # We have a playlist
         if "list" in url:
+            await ctx.send(adding_playlist)
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
                 data = ydl.extract_info(url, download=False)
                 for i in data['entries']:
                     queue_of_urls.append(i['webpage_url'])
                     queue_of_titles.append(i['title'])
-                await ctx.send("Added playlist to the queue. (If your provided link isn't a playlist, please send @aznd the link.)")
                 ydl.download((queue_of_urls[0],))
                 now_playing = data['entries'][0]['title']
                 song_there = os.path.isfile("song.webm")
