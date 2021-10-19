@@ -19,6 +19,9 @@ video_title = ""
 has_joined = False
 warn_user_not_in_channel = ("You need to be in a voice channel "
                             "to use this command.")
+added_playlist = ("Added playlist to the queue. "
+                  "(If your provided link isn't a playlist, "
+                  "please send @aznd the link.)")
 
 
 def add_list_queue_item(queue_url):
@@ -55,26 +58,23 @@ def next_song(ctx):
     global queue_of_urls
     global queue_of_titles
     voicechannel_author = ctx.message.author.voice.channel
-    try:
-        if voicechannel_author:
-            voice = discord.utils.get(client.voice_clients,
-                                      guild=ctx.guild)
-            if voice.is_playing():
-                voice.stop()
-            # data = search(queue_of_titles[0])
-            # final_url = data.get('webpage_url')
-            with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                ydl.download((queue_of_urls[0],))
-            for file in os.listdir("./"):
-                if file.endswith(".webm"):
-                    os.rename(file, "song.webm")
-                    voice.play(discord.FFmpegOpusAudio("song.webm"),
-                               after=lambda x: clear_np(ctx))
-                    now_playing = queue_of_titles[0]
-                    queue_of_titles.pop(0)
-                    queue_of_urls.pop(0)
-    except AttributeError:
-        ctx.send(warn_user_not_in_channel)
+    if voicechannel_author:
+        voice = discord.utils.get(client.voice_clients,
+                                  guild=ctx.guild)
+        if voice.is_playing():
+            voice.stop()
+        # data = search(queue_of_titles[0])
+        # final_url = data.get('webpage_url')
+        with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+            ydl.download((queue_of_urls[0],))
+        for file in os.listdir("./"):
+            if file.endswith(".webm"):
+                os.rename(file, "song.webm")
+                voice.play(discord.FFmpegOpusAudio("song.webm"),
+                           after=lambda x: clear_np(ctx))
+                now_playing = queue_of_titles[0]
+                queue_of_titles.pop(0)
+                queue_of_urls.pop(0)
 
 
 def clear_all():
@@ -179,9 +179,7 @@ async def play(ctx, *, url):
                 if voicechannel_author:
                     voiceChannel = discord.utils.get(ctx.guild.voice_channels,
                                                      name=str(voicechannel_author))
-                    if has_joined:
-                        pass
-                    else:
+                    if not has_joined:
                         await voiceChannel.connect()
                     voice = discord.utils.get(client.voice_clients,
                                               guild=ctx.guild)
@@ -200,7 +198,8 @@ async def play(ctx, *, url):
                 voicechannel_author = ctx.message.author.voice.channel
                 voiceChannel = discord.utils.get(ctx.guild.voice_channels,
                                                  name=str(voicechannel_author))
-                await voiceChannel.connect()
+                if not has_joined:
+                    await voiceChannel.connect()
                 for file in os.listdir("./"):
                     if file.endswith(".webm"):
                         os.rename(file, "song.webm")
