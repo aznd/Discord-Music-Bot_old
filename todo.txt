@@ -1,4 +1,3 @@
 TODO:
 
 - use cogs
-- maybe replace has_joined VAR by just using already existing is_connected() function
