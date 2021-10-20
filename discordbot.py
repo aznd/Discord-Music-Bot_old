@@ -22,7 +22,6 @@ now_playing = ""
 queue_of_urls = []
 queue_of_titles = []
 video_title = ""
-has_joined = False
 warn_user_not_in_channel = ("You need to be in a voice channel "
                             "to use this command.")
 adding_playlist = ("Adding playlist to the queue. "
@@ -236,7 +235,7 @@ async def play(ctx, *, url):
                 voicechannel_author = ctx.message.author.voice.channel
                 voiceChannel = discord.utils.get(ctx.guild.voice_channels,
                                                  name=str(voicechannel_author))
-                if not has_joined:
+                if not is_connected(ctx):
                     await voiceChannel.connect()
                 for file in os.listdir("./"):
                     if file.endswith(".webm"):
