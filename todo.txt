@@ -1,3 +1,4 @@
 TODO:
 
 - use cogs
+- only pop() on the after= function, we dont need it in the skip command cause its gonna voice.stop() either way

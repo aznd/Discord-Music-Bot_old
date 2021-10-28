@@ -34,6 +34,7 @@ added_playlist = ("Added playlist to the queue.")
 
 # copied this from stackoverflow. no idea what it does but it fixes a error (:
 # https://stackoverflow.com/questions/65881761/discord-gateway-warning-shard-id-none-heartbeat-blocked-for-more-than-10-second
+# its something about blocking and shit
 def to_thread(func: typing.Callable) -> typing.Coroutine:
     global queue_of_titles
     global queue_of_urls
@@ -82,6 +83,14 @@ def clear_np(ctx):
     global now_playing
     now_playing = ""
     next_song(ctx)
+    pop_first(ctx)
+
+
+def pop_first(ctx):
+    global queue_of_titles
+    global queue_of_urls
+    queue_of_urls.pop(0)
+    queue_of_titles.pop(0)
 
 
 def next_song(ctx):
@@ -103,8 +112,6 @@ def next_song(ctx):
                         if file.endswith(".webm"):
                             os.rename(file, "song.webm")
                             now_playing = queue_of_titles[0]
-                            queue_of_titles.pop(0)
-                            queue_of_urls.pop(0)
                             voice.play(discord.FFmpegOpusAudio("song.webm"),
                                        after=lambda x: clear_np(ctx))
                 except IndexError:
@@ -115,6 +122,8 @@ def next_song(ctx):
 
 def clear_all():
     global now_playing
+    global queue_of_titles
+    global queue_of_titles
     queue_of_titles.clear()
     queue_of_urls.clear()
     now_playing = ""
@@ -193,7 +202,7 @@ async def play(ctx, *, url):
             data = search(url)
             final_url = data.get('webpage_url')
             queue_of_urls.append(final_url)
-            add_list_queue_item(url)
+            queue_of_titles.append(data.get('title'))
             await ctx.send("Added Song to the queue.")
     # If nothing is currently playing, we can actually play it immediately.
     elif now_playing == "":
@@ -219,33 +228,34 @@ async def play(ctx, *, url):
                 for file in os.listdir("./"):
                     if file.endswith(".webm"):
                         os.rename(file, "song.webm")
-                        queue_of_titles.pop(0)
-                        queue_of_urls.pop(0)
                         voice.play(discord.FFmpegOpusAudio("song.webm"),
                                    after=lambda x: clear_np(ctx))
             else:
                 await ctx.send("You need to be in a voice channel")
     # We dont have a playlist
         else:
-            data = search(url)
-            final_url = data.get('webpage_url')
-            now_playing = data.get('title')
-            with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                ydl.download((final_url,))
-                voicechannel_author = ctx.message.author.voice.channel
-                voiceChannel = discord.utils.get(ctx.guild.voice_channels,
-                                                 name=str(voicechannel_author))
-                if not is_connected(ctx):
-                    await voiceChannel.connect()
-                for file in os.listdir("./"):
-                    if file.endswith(".webm"):
-                        os.rename(file, "song.webm")
-                        voice = discord.utils.get(client.voice_clients,
-                                                  guild=ctx.guild)
-                        queue_of_titles.pop(0)
-                        queue_of_urls.pop(0)
-                        voice.play(discord.FFmpegOpusAudio("song.webm"),
-                                   after=lambda x: clear_np(ctx))
+            try:
+                data = search(url)
+                final_url = data.get('webpage_url')
+                now_playing = data.get('title')
+                with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+                    ydl.download((final_url,))
+                    voicechannel_author = ctx.message.author.voice.channel
+                    voiceChannel = discord.utils.get(ctx.guild.voice_channels,
+                                                     name=str(voicechannel_author))
+                    voice = discord.utils.get(client.voice_clients,
+                                              guild=ctx.guild)
+                    if voice is None:
+                        await voiceChannel.connect()
+                    for file in os.listdir("./"):
+                        if file.endswith(".webm"):
+                            os.rename(file, "song.webm")
+                            voice = discord.utils.get(client.voice_clients,
+                                                      guild=ctx.guild)
+                            voice.play(discord.FFmpegOpusAudio("song.webm"),
+                                       after=lambda x: clear_np(ctx))
+            except Exception as e:
+                print(e)
 
 
 @client.command(aliases=['l'])
@@ -288,12 +298,9 @@ async def skip(ctx):
     global video_title
     global queue_of_titles
     global queue_of_urls
-    queue_of_urls.pop(0)
-    queue_of_titles.pop(0)
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     now_playing = ""
-    voice.stop()
     video_title = ""
+    pop_first(ctx)
     next_song(ctx)
 
 
