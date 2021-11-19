@@ -82,8 +82,8 @@ def is_connected(ctx):
 def clear_np(ctx):
     global now_playing
     now_playing = ""
-    next_song(ctx)
     pop_first(ctx)
+    next_song(ctx)
 
 
 def pop_first(ctx):
@@ -102,20 +102,19 @@ def next_song(ctx):
         if voicechannel_author:
             voice = discord.utils.get(client.voice_clients,
                                       guild=ctx.guild)
-            if voice is not None:
-                if voice.is_playing():
-                    voice.stop()
-                try:
-                    with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                        ydl.download((queue_of_urls[0],))
-                    for file in os.listdir("./"):
-                        if file.endswith(".webm"):
-                            os.rename(file, "song.webm")
-                            now_playing = queue_of_titles[0]
-                            voice.play(discord.FFmpegOpusAudio("song.webm"),
-                                       after=lambda x: clear_np(ctx))
-                except IndexError:
-                    ctx.send("Queue is now empty.")
+            if voice.is_playing():
+                voice.stop()
+            try:
+                with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+                    ydl.download((queue_of_urls[0],))
+                for file in os.listdir("./"):
+                    if file.endswith(".webm"):
+                        os.rename(file, "song.webm")
+                        now_playing = queue_of_titles[0]
+                        voice.play(discord.FFmpegOpusAudio("song.webm"),
+                                   after=lambda x: clear_np(ctx))
+            except IndexError:
+                ctx.send("Queue is now empty.")
     except Exception as e:
         print(e)
 
@@ -146,7 +145,7 @@ async def list(ctx):
         await ctx.send("Nothing is in the queue.")
     else:
         global video_title
-        i = 1
+        i = 2
         embed = discord.Embed(title="Queue:",
                               description=" ",
                               color=0xFF5733)
@@ -300,7 +299,6 @@ async def skip(ctx):
     global queue_of_urls
     now_playing = ""
     video_title = ""
-    pop_first(ctx)
     next_song(ctx)
 
 
