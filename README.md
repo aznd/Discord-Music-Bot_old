@@ -1,2 +1,2 @@
 # Discord Music Bot
-Simple Music Bot for Discord using discord.py
+NOTE: This bot is shit, dont use it. Instead use [my new discord music bot](https://www.github.com/azndd/Discord-Music-Bot)
